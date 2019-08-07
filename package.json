@@ -4,10 +4,15 @@
     "description": "my first socket.io app",
     "main": "index.js",
     "scripts": {
-        "start": "node index.js"
-      },
+        "start": "node index.js",
+        "build": "webpack"
+    },
     "dependencies": {
         "express": "^4.17.1",
         "socket.io": "^2.2.0"
+    },
+    "devDependencies": {
+        "webpack": "^4.39.1",
+        "webpack-cli": "^3.3.6"
     }
 }
