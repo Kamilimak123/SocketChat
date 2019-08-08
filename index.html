@@ -18,11 +18,11 @@
             width: 100vw;
             height: 100vh;
             grid-template-columns: auto;
-            grid-template-rows: 90% auto;
+            grid-template-rows: calc(90% - 20px) auto;
         }
 
         .chat-messages {
-            max-height: 100vh;
+            max-height: 50vh;
             width: 100%;
             grid-column: 1;
             grid-row: 1;
@@ -48,11 +48,18 @@
         .chat-form {
             position: fixed;
             bottom: 0;
-            height: 10%;
+            height: calc(10% + 20px);
             min-height: 50px;
             width: 100%;
             grid-column: 1;
             grid-row: 2;
+        }
+
+        .chat-type {
+            text-align: left;
+            display: none;
+            height: 20px;
+            font-size: 1rem;
         }
 
         form {
@@ -62,13 +69,11 @@
             background: #000;
             width: 100%;
             height: 100%;
-            min-height: 50px;
         }
 
         form input {
             font: 2rem Helvetica, Arial;
             border: 0;
-            min-height: 50px;
             height: calc(100% - 10px);
             width: calc(100% - 10px);
             align-self: center;
@@ -79,7 +84,6 @@
 
         form button {
             font: 2rem Helvetica, Arial;
-            min-height: 50px;
             height: calc(100% - 10px);
             width: calc(100% - 10px);
             align-self: center;
@@ -88,6 +92,13 @@
             border: none;
             grid-column: 2;
             grid-row: 1;
+        }
+
+        @media (max-width: 900px) {
+            form {
+                grid-template-columns: 80% auto;
+                grid-template-rows: auto;
+            }
         }
     </style>
 </head>
@@ -100,6 +111,9 @@
             <ul id="messages"></ul>
         </div>
         <div class="chat-form">
+            <div class="chat-type">
+
+            </div>
             <form id="socket-form" action="">
                 <input id="m" autocomplete="off" /><button>Send</button>
             </form>
@@ -111,23 +125,69 @@
 <script>
     let socket = io();
     let nickname = prompt("Please enter your nickname:");
+    let userTyping = document.getElementsByClassName("chat-type")[0];
+    let typeBlock = false;
     socket.emit('new user', nickname);
     document.getElementById("socket-form").addEventListener("submit", sendMsg);
+    document.getElementById("m").addEventListener('input', updateValue);
+
+    function updateValue() {
+        let e = document.getElementById("m");
+        console.log(e.value);
+        if (e.value === "") {
+            socket.emit('user not typing', nickname);
+            typeBlock = false;
+        } else {
+            if (typeBlock == false) {
+                socket.emit('user typing', nickname);
+                typeBlock = true;
+            }
+        }
+    }
+
+    socket.on('user typing', function (msg) {
+        userTyping.style.display = "block";
+        userTyping.innerHTML += msg + " is typing... ";
+    });
+    socket.on('user not typing', function (msg) {
+        let toReplace = msg + " is typing... ";
+        userTyping.innerHTML = userTyping.innerHTML.replace(toReplace, "");
+        if (userTyping.innerHTML.trim() == "") {
+            userTyping.style.display = "none";
+        }
+    });
+    socket.on('typing users', function (typingUsers) {
+        let i = 0;
+        userTyping.style.display = "block";
+        for (i = 0; i < typingUsers.length; i++) {
+            userTyping.innerHTML += typingUsers[i] + " is typing... ";
+        }
+    });
+
     function sendMsg(e) {
         e.preventDefault(); // prevents page reloading
         if (document.getElementById("m").value !== "") {
-            socket.emit('chat message', nickname + ": " + document.getElementById("m").value);
+            let msg = nickname + ": " + document.getElementById("m").value;
+            socket.emit('chat message', msg);
             document.getElementById("m").value = "";
+            socket.emit('user not typing', nickname);
+            typeBlock = false;
+            addMessageToList(msg);
         }
         return false;
     }
-    socket.on('chat message', function (msg) {
+
+    function addMessageToList(msg) {
         let ul = document.getElementById("messages");
         let li = document.createElement("li");
         li.appendChild(document.createTextNode(msg));
         ul.appendChild(li);
         let div = document.getElementById("messages");
         div.scrollTop = div.scrollHeight - div.clientHeight;
+    }
+
+    socket.on('chat message', function (msg) {
+        addMessageToList(msg);
     });
 
 </script>
