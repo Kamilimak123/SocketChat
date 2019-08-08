@@ -107,7 +107,7 @@
 <script>
     let socket = io();
     let nickname = prompt("Please enter your nickname:");
-    socket.emit('chat message', "User " + nickname + " has joined the chat!");
+    socket.emit('new user', nickname);
     document.getElementById("socket-form").addEventListener("submit", sendMsg);
     function sendMsg(e) {
         e.preventDefault(); // prevents page reloading
