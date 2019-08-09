@@ -1,7 +1,7 @@
 # SocketChat
 Chat application using socket.io and express
 
-Simple chat application for learning socket.io. Deployed on heroku.
+Simple chat application for learning socket.io. Deployed on heroku: https://chat-test-app123.herokuapp.com/
 
 Current features:
   - showing nicknames
