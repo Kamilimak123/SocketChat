@@ -10,7 +10,7 @@
         }
 
         body {
-            font: 2rem Helvetica, Arial;
+            font: 32px Helvetica, Arial;
         }
 
         .chat-grid {
@@ -18,7 +18,7 @@
             width: 100vw;
             height: 100vh;
             grid-template-columns: auto;
-            grid-template-rows: calc(90% - 20px) auto;
+            grid-template-rows: calc(90% - 32px) auto;
         }
 
         .chat-messages {
@@ -32,7 +32,6 @@
             overflow-x: hidden;
             overflow-y: visible;
             height: 100%;
-            list-style-type: none;
             margin: 0;
             padding: 0;
         }
@@ -48,7 +47,7 @@
         .chat-form {
             position: fixed;
             bottom: 0;
-            height: calc(10% + 20px);
+            height: calc(10% + 32px);
             min-height: 50px;
             width: 100%;
             grid-column: 1;
@@ -58,8 +57,8 @@
         .chat-type {
             text-align: left;
             display: none;
-            height: 20px;
-            font-size: 1rem;
+            height: 32px;
+            font-size: 32px;
         }
 
         form {
@@ -72,7 +71,7 @@
         }
 
         form input {
-            font: 2rem Helvetica, Arial;
+            font: 32px Helvetica, Arial;
             border: 0;
             height: calc(100% - 10px);
             width: calc(100% - 10px);
@@ -83,7 +82,7 @@
         }
 
         form button {
-            font: 2rem Helvetica, Arial;
+            font: 32px Helvetica, Arial;
             height: calc(100% - 10px);
             width: calc(100% - 10px);
             align-self: center;
@@ -124,10 +123,26 @@
 </body>
 <script>
     let socket = io();
-    let nickname = prompt("Please enter your nickname:");
+    let nicknameFree = false;
+    let nickname = null;
+    let nickPrompt = "Please enter your nickname:";
+    login();
+    function login() {
+        nickname = prompt(nickPrompt);
+        socket.emit('check nickname', nickname, function (msg) {
+            nicknameFree = msg;
+            if (nicknameFree == true) {
+                socket.emit('new user', nickname);
+            }else{
+                nickPrompt = "This nickname is already taken! Please enter another nickname:";
+                login();
+            }
+        });
+    }
+
     let userTyping = document.getElementsByClassName("chat-type")[0];
     let typeBlock = false;
-    socket.emit('new user', nickname);
+
     document.getElementById("socket-form").addEventListener("submit", sendMsg);
     document.getElementById("m").addEventListener('input', updateValue);
 

@@ -18,10 +18,12 @@ let Users = [];
 // search for user of given attribute name and value, returns user data and index
 function getUserByAnything(attribute, value) {
     let i = 0;
-    while (Users[i][attribute] !== value || (Users.length < i)) {
+    if (Users.length <= i) { return false; }
+    while (Users[i][attribute] !== value || (Users.length <= i)) {
         i++;
+        if (Users.length <= i) { return false; }
     }
-    if (Users.length < i) { return false; }
+    if (Users.length <= i) { return false; }
     let user = {
         data: Users[i],
         index: i
@@ -29,7 +31,7 @@ function getUserByAnything(attribute, value) {
     return user;
 }
 
-// search for users of given attribute name and value, returns list of users
+// search for users of given attribute name and value, returns list of users attributes
 function getUsersListByAnything(attribute, getattribute, value) {
     let i = 0;
     let usersList = [];
@@ -44,6 +46,20 @@ function getUsersListByAnything(attribute, getattribute, value) {
 // on user connected
 io.on('connection', function (socket) {
     console.log('a user connected');
+
+    socket.on('check nickname', function (msg, fn) {
+        let isNicknameFree = true;
+        console.log(isNicknameFree);
+
+        if (getUserByAnything("nickname", msg) == false) {
+            isNicknameFree = true;
+            console.log(isNicknameFree);
+        } else {
+            isNicknameFree = false;
+        }
+        console.log(isNicknameFree);
+        fn(isNicknameFree);
+    });
 
     // on user connected
     socket.on('new user', function (msg) {
@@ -66,32 +82,39 @@ io.on('connection', function (socket) {
         console.log("User " + msg + " has joined the chat!");
     });
 
+    // on any user starts typing
     socket.on('user typing', function (msg) {
         let user = getUserByAnything("nickname", msg);
         Users[user.index].typing = true;
+        // send message to other users
         socket.broadcast.emit('user typing', msg);
         console.log("user " + msg + " is typing");
     });
 
+    // on any user ends typing
     socket.on('user not typing', function (msg) {
         let user = getUserByAnything("nickname", msg);
         Users[user.index].typing = false;
+        // send message to other users
         socket.broadcast.emit('user not typing', msg);
         console.log("user " + msg + " ended typing");
     });
 
-
+    // on received chat message
     socket.on('chat message', function (msg) {
+        // send message to other users
         socket.broadcast.emit('chat message', msg);
     });
 
+    // on user disconnected
     socket.on('disconnect', function () {
-        let i = 0;
         let user = getUserByAnything("socketid", socket.id);
-        Users.splice(user.index, 1);
-        io.emit('chat message', "User " + user.data.nickname + " has left the chat!");
-        io.emit('user not typing', user.data.nickname);
-        console.log("User " + user.data.nickname + " has left the chat!");
+        if (user !== false) {
+            Users.splice(user.index, 1);
+            io.emit('chat message', "User " + user.data.nickname + " has left the chat!");
+            io.emit('user not typing', user.data.nickname);
+            console.log("User " + user.data.nickname + " has left the chat!");
+        }
     });
 });
 
