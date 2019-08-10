@@ -45,19 +45,16 @@ function getUsersListByAnything(attribute, getattribute, value) {
 
 // on user connected
 io.on('connection', function (socket) {
-    console.log('a user connected');
+    console.log('new user connected');
 
     socket.on('check nickname', function (msg, fn) {
         let isNicknameFree = true;
-        console.log(isNicknameFree);
 
         if (getUserByAnything("nickname", msg) == false) {
             isNicknameFree = true;
-            console.log(isNicknameFree);
         } else {
             isNicknameFree = false;
         }
-        console.log(isNicknameFree);
         fn(isNicknameFree);
     });
 
@@ -80,6 +77,15 @@ io.on('connection', function (socket) {
         // new user announce
         io.emit('chat message', "User " + msg + " has joined the chat!");
         console.log("User " + msg + " has joined the chat!");
+
+        // send online users
+        let onlineUsers = "";
+        let i = 0;
+        for(i=0;i<Users.length-1;i++){
+            onlineUsers += Users[i].nickname + ", ";
+        }
+        onlineUsers += Users[i].nickname + ".";
+        socket.emit('chat message', "Users online: " + onlineUsers);
     });
 
     // on any user starts typing
